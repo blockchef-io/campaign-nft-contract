@@ -21,31 +21,45 @@ contract BlockChefCNFT is Ownable, ERC721 {
         bytes signature;
     }
 
-    bool public TRANSFER_LOCK;
+    bool public MINTABLE;
+    bool public TRANSFERABLE;
     uint256 public totalSupply;
     mapping(cNFTtype => uint256) public typeToTotal;
     mapping(address => mapping(cNFTtype => uint256)) public ownerToTotalTypes;
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(bytes32 => bool) private storedCID;
 
+    event Mint(
+        address indexed owner,
+        uint256 indexed id,
+        string cid,
+        cNFTtype t
+    );
+
     constructor()
         Ownable(msg.sender)
         ERC721("BlockChef Campaign NFT", "BC-CNFT")
     {
-        TRANSFER_LOCK = true;
+        MINTABLE = true;
     }
 
     receive() external payable {}
 
+    function oneTimeMintLocker() external onlyOwner {
+        delete MINTABLE;
+    }
+
     function oneTimeTransferUnlocker() external onlyOwner {
-        delete TRANSFER_LOCK;
+        TRANSFERABLE = true;
     }
 
     function withrawETH() external {
         payable(owner()).transfer(address(this).balance);
     }
 
-    function safeMint(address to, cNFT memory nft) external payable {
+    function mint(address to, cNFT memory nft) external payable {
+        require(MINTABLE, "NOT_MINTABLE_ANYMORE");
+
         if (
             nft.t == cNFTtype.Bronze ||
             bytes(nft.cid).length == 0 ||
@@ -62,9 +76,11 @@ contract BlockChefCNFT is Ownable, ERC721 {
         idToCNFT[totalSupply] = nft;
         storedCID[keccak256(bytes(nft.cid))] = true;
         _safeMint(to, totalSupply);
-        ownerToTotalTypes[msg.sender][nft.t]++;
+        ownerToTotalTypes[to][nft.t]++;
         typeToTotal[nft.t]++;
         totalSupply++;
+
+        emit Mint(to, totalSupply - 1, nft.cid, nft.t);
     }
 
     function transferFrom(
@@ -72,12 +88,13 @@ contract BlockChefCNFT is Ownable, ERC721 {
         address to,
         uint256 id
     ) public override {
-        require(!TRANSFER_LOCK, "TRANSFER_LOCKED");
+        require(!TRANSFERABLE, "TRANSFER_LOCKED");
 
         super.transferFrom(from, to, id);
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
-        return string(abi.encodePacked("https://ipfs.io/ipfs/", idToCNFT[id].cid));
+        return
+            string(abi.encodePacked("https://ipfs.io/ipfs/", idToCNFT[id].cid));
     }
 }

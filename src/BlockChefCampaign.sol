@@ -8,6 +8,9 @@ import {ERC721} from "solmate/tokens/ERC721.sol";
 contract BlockChefCampaignNFT is Ownable, ERC721 {
     using ECDSA for bytes32;
 
+    /*******************************\
+    |-*-*-*-*-*   TYPES   *-*-*-*-*-|
+    \*******************************/
     enum cNFTtype {
         Bronze,
         Silver,
@@ -21,6 +24,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         bytes signature;
     }
 
+    /********************************\
+    |-*-*-*-*-*   STATES   *-*-*-*-*-|
+    \********************************/
     bool public MINTABLE;
     bool public TRANSFERABLE;
     string public IPFS_URL;
@@ -30,6 +36,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(bytes32 => bool) private storedCID;
 
+    /********************************\
+    |-*-*-*-*-*   EVENTS   *-*-*-*-*-|
+    \********************************/
     event Mint(
         address indexed owner,
         uint256 indexed id,
@@ -37,6 +46,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         cNFTtype t
     );
 
+    /********************************\
+    |-*-*-*-*-*  BUILT-IN  *-*-*-*-*-|
+    \********************************/
     constructor(string memory ipfs_url)
         Ownable(msg.sender)
         ERC721("BlockChef Campaign NFT", "BC-CNFT")
@@ -47,8 +59,13 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         MINTABLE = true;
     }
 
-    receive() external payable {}
+    receive() external payable {
+        mint(msg.sender, cNFT(cNFTtype.Bronze, "", ""));
+    }
 
+    /********************************\
+    |-*-*-*-*   ONLY-OWNER   *-*-*-*-|
+    \********************************/
     function oneTimeMintLocker() external onlyOwner {
         delete MINTABLE;
     }
@@ -57,11 +74,14 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         TRANSFERABLE = true;
     }
 
-    function withrawETH() external {
+    function withrawETH() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
     }
 
-    function mint(address to, cNFT memory nft) external payable {
+    /********************************\
+    |-*-*-*    ERC721-LOGIC    *-*-*-|
+    \********************************/
+    function mint(address to, cNFT memory nft) public payable {
         require(MINTABLE, "NOT_MINTABLE_ANYMORE");
 
         if (
@@ -71,11 +91,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
             storedCID[keccak256(abi.encodePacked(nft.cid))] ||
             keccak256(abi.encodePacked(nft.cid)).recover(nft.signature) !=
             owner()
-        ) {
-            nft.cid = "null";
-            nft.signature = "null";
-            nft.t = cNFTtype.Bronze;
-        }
+        ) nft = cNFT(cNFTtype.Bronze, "null", "null");
+
+        emit Mint(to, totalSupply, nft.cid, nft.t);
 
         idToCNFT[totalSupply] = nft;
         storedCID[keccak256(bytes(nft.cid))] = true;
@@ -83,8 +101,6 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         ownerToTotalTypes[to][nft.t]++;
         typeToTotal[nft.t]++;
         totalSupply++;
-
-        emit Mint(to, totalSupply - 1, nft.cid, nft.t);
     }
 
     function transferFrom(
@@ -92,9 +108,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         address to,
         uint256 id
     ) public override {
-        require(!TRANSFERABLE, "TRANSFER_LOCKED");
-
-        super.transferFrom(from, to, id);
+        TRANSFERABLE
+            ? super.transferFrom(from, to, id)
+            : revert("TRANSFER_LOCKED");
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {

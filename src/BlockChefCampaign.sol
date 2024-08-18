@@ -30,7 +30,6 @@ contract BlockChefCNFT is Ownable, ERC721 {
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(bytes32 => bool) private storedCID;
 
-
     event Mint(
         address indexed owner,
         uint256 indexed id,
@@ -99,7 +98,6 @@ contract BlockChefCNFT is Ownable, ERC721 {
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
-        return
-            string(abi.encodePacked(IPFS_URL, idToCNFT[id].cid));
+        return string(abi.encodePacked(IPFS_URL, idToCNFT[id].cid));
     }
 }

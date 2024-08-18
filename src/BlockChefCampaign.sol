@@ -23,11 +23,13 @@ contract BlockChefCNFT is Ownable, ERC721 {
 
     bool public MINTABLE;
     bool public TRANSFERABLE;
+    string public IPFS_URL;
     uint256 public totalSupply;
     mapping(cNFTtype => uint256) public typeToTotal;
     mapping(address => mapping(cNFTtype => uint256)) public ownerToTotalTypes;
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(bytes32 => bool) private storedCID;
+
 
     event Mint(
         address indexed owner,
@@ -36,10 +38,13 @@ contract BlockChefCNFT is Ownable, ERC721 {
         cNFTtype t
     );
 
-    constructor()
+    constructor(string memory ipfs_url)
         Ownable(msg.sender)
         ERC721("BlockChef Campaign NFT", "BC-CNFT")
     {
+        require(bytes(ipfs_url).length != 0, "CHECK_IPFS_URL");
+
+        IPFS_URL = ipfs_url;
         MINTABLE = true;
     }
 
@@ -95,6 +100,6 @@ contract BlockChefCNFT is Ownable, ERC721 {
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         return
-            string(abi.encodePacked("https://ipfs.io/ipfs/", idToCNFT[id].cid));
+            string(abi.encodePacked(IPFS_URL, idToCNFT[id].cid));
     }
 }

@@ -64,7 +64,7 @@ contract BlockChefCNFT is Ownable, ERC721 {
             nft.t == cNFTtype.Bronze ||
             bytes(nft.cid).length == 0 ||
             nft.signature.length == 0 ||
-            storedCID[keccak256(bytes(nft.cid))] ||
+            storedCID[keccak256(abi.encodePacked(nft.cid))] ||
             keccak256(abi.encodePacked(nft.cid)).recover(nft.signature) !=
             owner()
         ) {

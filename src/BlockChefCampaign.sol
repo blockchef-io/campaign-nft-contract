@@ -23,6 +23,8 @@ contract BlockChefCNFT is Ownable, ERC721 {
 
     bool public TRANSFER_LOCK;
     uint256 public totalSupply;
+    mapping(cNFTtype => uint256) public typeToTotal;
+    mapping(address => mapping(cNFTtype => uint256)) public ownerToTotalTypes;
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(bytes32 => bool) private storedCID;
 
@@ -60,6 +62,8 @@ contract BlockChefCNFT is Ownable, ERC721 {
         idToCNFT[totalSupply] = nft;
         storedCID[keccak256(bytes(nft.cid))] = true;
         _safeMint(to, totalSupply);
+        ownerToTotalTypes[msg.sender][nft.t]++;
+        typeToTotal[nft.t]++;
         totalSupply++;
     }
 

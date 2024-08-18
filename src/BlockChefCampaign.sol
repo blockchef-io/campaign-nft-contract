@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
-import {ERC721} from "solmate/tokens/ERC721.sol";
-import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
+import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
+import {ERC721} from "solmate/tokens/ERC721.sol";
 
 contract BlockChefCNFT is Ownable, ERC721 {
     using ECDSA for bytes32;

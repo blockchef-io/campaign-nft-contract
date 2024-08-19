@@ -11,8 +11,8 @@ contract BlockChefCampaignNFTTest is Test {
     string private IPFS_URL = "https://ipfs.io/ipfs/";
     string private TEST_CID = "QmTestCID";
     address private immutable OWNER = vm.addr(OWNER_PK);
-    address private immutable USER1 = address(0x4567);
-    address private immutable USER2 = address(0x89AB);
+    address private immutable USER1 = vm.addr(0x4567);
+    address private immutable USER2 = vm.addr(0x89AB);
     uint256 private constant OWNER_PK = 0x0123;
 
     // Config

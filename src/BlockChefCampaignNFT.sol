@@ -91,13 +91,13 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
             storedCID[keccak256(abi.encodePacked(nft.cid))] ||
             keccak256(abi.encodePacked(nft.cid)).recover(nft.signature) !=
             owner()
-        ) nft = cNFT(cNFTtype.Bronze, "null", "null");
+        ) nft = cNFT({t: cNFTtype.Bronze, cid: "null", signature: "null"});
 
         emit Mint(to, totalSupply, nft.cid, nft.t);
 
         idToCNFT[totalSupply] = nft;
         storedCID[keccak256(bytes(nft.cid))] = true;
-        _safeMint(to, totalSupply);
+        _mint(to, totalSupply);
         ownerToTotalTypes[to][nft.t]++;
         typeToTotal[nft.t]++;
         totalSupply++;

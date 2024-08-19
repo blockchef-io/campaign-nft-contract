@@ -113,9 +113,12 @@ contract BlockChefCampaignNFTTest is Test {
     function test_MintingWithValidSignature() external {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             OWNER_PK,
-            keccak256(bytes(TEST_CID))
+            keccak256(
+                abi.encodePacked(bytes(TEST_CID), bytes20(address(USER1)))
+            )
         );
 
+        vm.prank(USER1);
         nft.mint(
             USER1,
             BlockChefCampaignNFT.cNFT(
@@ -135,7 +138,34 @@ contract BlockChefCampaignNFTTest is Test {
         //* TODO: expectEmit must be added.
     }
 
+    function test_MintingWhileFrontRunningValidSignature() external {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            OWNER_PK,
+            keccak256(
+                abi.encodePacked(bytes(TEST_CID), bytes20(address(USER1)))
+            )
+        );
+
+        vm.prank(USER2);
+        nft.mint(
+            USER2,
+            BlockChefCampaignNFT.cNFT(
+                BlockChefCampaignNFT.cNFTtype.Gold,
+                TEST_CID,
+                abi.encodePacked(r, s, v) // This MUST be a valid signature
+            )
+        );
+        assertEq(nft.ownerOf(0), USER2);
+        assertEq(
+            nft.tokenURI(0),
+            string(abi.encodePacked(nft.IPFS_URL(), "null"))
+        );
+        (BlockChefCampaignNFT.cNFTtype t, , ) = nft.idToCNFT(0);
+        assertEq(uint8(t), uint8(BlockChefCampaignNFT.cNFTtype.Bronze));
+    }
+
     function test_MintingWithFakeSignature() external {
+        vm.prank(USER1);
         nft.mint(
             USER1,
             BlockChefCampaignNFT.cNFT(
@@ -159,6 +189,7 @@ contract BlockChefCampaignNFTTest is Test {
                 5
             )
         );
+        vm.prank(USER1);
         nft.mint(
             USER1,
             BlockChefCampaignNFT.cNFT(
@@ -181,7 +212,9 @@ contract BlockChefCampaignNFTTest is Test {
             abi.encodePacked(r, s, v) // This MUST be a valid signature
         );
 
+        vm.prank(USER1);
         nft.mint(USER1, validCNFT);
+        vm.prank(USER2);
         nft.mint(USER2, validCNFT);
         assertEq(nft.totalSupply(), 2);
         assertEq(nft.ownerOf(1), USER2);
@@ -194,6 +227,7 @@ contract BlockChefCampaignNFTTest is Test {
     }
 
     function test_MintingFallbacksToBronze() external {
+        vm.prank(USER1);
         (bool ok, ) = address(nft).call("");
         assertEq(ok, true);
 
@@ -210,6 +244,7 @@ contract BlockChefCampaignNFTTest is Test {
         nft.oneTimeMintLocker();
 
         vm.expectRevert("NOT_MINTABLE_ANYMORE");
+        vm.prank(USER1);
         nft.mint(
             USER1,
             BlockChefCampaignNFT.cNFT(

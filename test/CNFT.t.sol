@@ -132,7 +132,7 @@ contract BlockChefCampaignNFTTest is Test {
         );
         (BlockChefCampaignNFT.cNFTtype t, , ) = nft.idToCNFT(0);
         assertEq(uint8(t), uint8(BlockChefCampaignNFT.cNFTtype.Gold));
-        // expectEmit
+        //* TODO: expectEmit must be added.
     }
 
     function test_MintingWithFakeSignature() external {

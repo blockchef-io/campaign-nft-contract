@@ -40,13 +40,19 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(address => mapping(cNFTtype => uint256)) public ownerToTotalTypes;
 
-    uint256 public immutable SPECIALS_FEE;
     uint256 public immutable BONUS_FEE;
+    uint256 public immutable SPECIALS_FEE;
 
     /********************************\
     |-*-*-*-*-*   EVENTS   *-*-*-*-*-|
     \********************************/
-    event Mint(
+    event BatchBonusMint(
+        address indexed owner,
+        uint256 indexed idFrom,
+        uint256 indexed idTo
+    );
+
+    event SpecialMint(
         address indexed owner,
         uint256 indexed id,
         string cid,
@@ -117,6 +123,8 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         typeToTotal[cNFTtype.Bonus] += totalMintableCNFTs;
         totalSupply += totalMintableCNFTs;
 
+        emit BatchBonusMint(to, supply + 1, supply + totalMintableCNFTs);
+
         if (msg.value > validValue) {
             (bool sent, ) = payable(msg.sender).call{
                 value: (msg.value - validValue)
@@ -139,7 +147,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
             storedCID[keccak256(abi.encodePacked(nft.cid))] ||
             keccak256(abi.encodePacked(nft.cid, to)).recover(nft.sign) !=
             owner()
-        ) nft = cNFT({t: cNFTtype.Bonus, cid: "Qm", sign: ""});
+        ) nft = cNFT({t: cNFTtype.Bonus, cid: "", sign: ""});
 
         totalSupply++;
         ownerToTotalTypes[to][nft.t]++;
@@ -163,7 +171,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
             require(sent);
         }
 
-        emit Mint(to, totalSupply, nft.cid, nft.t);
+        emit SpecialMint(to, totalSupply, nft.cid, nft.t);
     }
 
     function transferFrom(

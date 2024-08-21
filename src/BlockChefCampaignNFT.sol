@@ -29,6 +29,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     \********************************/
     bool public MINTABLE;
     string public IPFS_URL;
+    address public FORGE_DELEGATE_IMPLEMENTATION;
     uint256 public totalSupply;
     mapping(bytes32 => bool) public storedCID;
     mapping(cNFTtype => uint256) public typeToTotal;
@@ -85,6 +86,17 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     \********************************/
     function oneTimeMintLocker() external onlyOwner {
         delete MINTABLE;
+    }
+
+    function oneTimeForgeDelegateeSetter(address implementation)
+        external
+        onlyOwner
+    {
+        require(!MINTABLE, "DISABLE_MINTING_FIRST");
+        require(implementation != address(0), "ZERO_ADDRESS_PROVIDED");
+        require(FORGE_DELEGATE_IMPLEMENTATION == address(0), "SETTELD_BEFORE");
+
+        FORGE_DELEGATE_IMPLEMENTATION = implementation;
     }
 
     function withrawETH() external onlyOwner {
@@ -196,7 +208,15 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         ownerSpecialsDualMap[to][id] = type(uint256).max - ownerCurrentSI[to];
     }
 
-    function forgeBonuses() external {}
+    function forgeBonuses() external payable {
+        require(
+            FORGE_DELEGATE_IMPLEMENTATION != address(0),
+            "ZERO_ADDRESS_PROVIDED"
+        );
+
+        (bool ok, ) = payable(FORGE_DELEGATE_IMPLEMENTATION).delegatecall("");
+        require(ok, "CALL_FAILED");
+    }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         return string(abi.encodePacked(IPFS_URL, idToCNFT[id].cid));

@@ -35,8 +35,9 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     mapping(cNFTtype => uint256) public typeToTotal;
     mapping(address => uint256) public ownerCurrentSI;
     mapping(address => uint256[]) public ownerBonusCNFTs;
-    // user => index => nftID | user => nftID => type(uint256).max - index
-    // so if (user => nftID = 0 || user => index = 0), indicates that nftID doesnt blong to user
+    // (user => index => nftID) | (user => nftID => type(uint256).max - index)
+    // so if (user => nftID = 0 || user => index = 0)
+    // indicates that nftID doesnt blong to user/doesnt exist
     mapping(address => mapping(uint256 => uint256)) public ownerSpecialsDualMap;
     mapping(uint256 => cNFT) public idToCNFT;
     mapping(address => mapping(cNFTtype => uint256)) public ownerToTotalTypes;

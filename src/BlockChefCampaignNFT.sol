@@ -70,7 +70,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         string memory ipfs_url
     ) Ownable(msg.sender) ERC721("BlockChef Campaign NFT", "BC-CNFT") {
         require(bytes(ipfs_url).length != 0, "CHECK_IPFS_URL");
-        require(sfee != 0 && bfee != 0, "NONE_ZERO_FEE");
+        require(sfee != 0 && bfee != 0, "ZERO_FEE_PROVIDED");
 
         SPECIALS_FEE = sfee;
         BONUS_FEE = bfee;

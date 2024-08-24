@@ -28,7 +28,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
     |-*-*-*-*-*   STATES   *-*-*-*-*-|
     \********************************/
     bool public MINTABLE;
-    address public FORGE_DELEGATE_IMPLEMENTATION;
+    address public FORGE;
     uint256 public totalSupply;
     mapping(bytes32 => bool) public storedCID;
     mapping(cNFTtype => uint256) public typeToTotal;
@@ -99,15 +99,15 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         delete MINTABLE;
     }
 
-    function oneTimeForgeDelegateeSetter(address implementation)
+    function oneTimeForgeSetter(address forge)
         external
         onlyOwner
     {
         require(!MINTABLE, "DISABLE_MINTING_FIRST");
-        require(implementation != address(0), "ZERO_ADDRESS_PROVIDED");
-        require(FORGE_DELEGATE_IMPLEMENTATION == address(0), "SETTELD_BEFORE");
+        require(forge != address(0), "ZERO_ADDRESS_PROVIDED");
+        require(FORGE == address(0), "SETTELD_BEFORE");
 
-        FORGE_DELEGATE_IMPLEMENTATION = implementation;
+        FORGE = forge;
     }
 
     function withrawETH() external onlyOwner {
@@ -207,7 +207,7 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         uint256 id
     ) public override {
         require(!MINTABLE, "TRANSFER_LOCKED");
-        require(idToCNFT[id].t != cNFTtype.Bonus);
+        require(idToCNFT[id].t != cNFTtype.Bonus || FORGE != address(0));
 
         super.transferFrom(from, to, id);
 
@@ -221,19 +221,6 @@ contract BlockChefCampaignNFT is Ownable, ERC721 {
         ownerCurrentSI[to]++;
         ownerSpecialsDualMap[to][ownerCurrentSI[to]] = id;
         ownerSpecialsDualMap[to][id] = type(uint256).max - ownerCurrentSI[to];
-    }
-
-    /********************************\
-    |-*-*   ERC721-FORGE-LOGIC   *-*-|
-    \********************************/
-    function forgeBonuses() external payable {
-        require(
-            FORGE_DELEGATE_IMPLEMENTATION != address(0),
-            "ZERO_ADDRESS_PROVIDED"
-        );
-
-        (bool ok, ) = payable(FORGE_DELEGATE_IMPLEMENTATION).delegatecall("");
-        require(ok, "CALL_FAILED");
     }
 
     /********************************\
